@@ -1,0 +1,12 @@
+#Project files
+*.iml
+
+#Subversion files
+.idea/*
+.idea/libraries/*.xml
+target/
+logs/
+.settings/
+.classpath
+.project
+MANIFEST.MF
