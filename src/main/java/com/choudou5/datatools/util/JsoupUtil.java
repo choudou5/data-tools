@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.List;
@@ -23,25 +24,38 @@ public class JsoupUtil {
      * @param url
      * @return
      */
-    public static Document getDocument(String url) {
-        return getDocument(url, 1, 3);
+    public static Document getDocument(String url, String charsetName) {
+        return getDocument(url, charsetName, 1, 3);
     }
 
-    private static Document getDocument(String url, int loop, int max) {
+    public static Document getDocument(String url) {
+        return getDocument(url, "UTF-8", 1, 3);
+    }
+
+
+    private static Document getDocument(String url, String charsetName, int loop, int max) {
         Document doc = null;
+        InputStream is = null;
         try {
-            doc = Jsoup.parse(new URL(url), 1000 * 5);
+            is = new URL(url).openStream();
+            doc = Jsoup.parse(is, charsetName, url);
         } catch (Exception e) {
             if(!(e instanceof SocketTimeoutException))
-                e.printStackTrace();
+                LogHelper.error(url, e);
             if(loop == max)
                 return null;
             try {
                 long sleep = 3000+(loop*1000);
                 LogHelper.log("休眠" + (sleep / 1000) + "秒，准备开始第" + loop + "次重试.");
                 Thread.currentThread().sleep(sleep);
-                return getDocument(url, ++loop, max);
+                return getDocument(url, charsetName, ++loop, max);
             } catch (InterruptedException e1) {e1.printStackTrace();}
+        }finally {
+            try {
+                if(is != null) is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return doc;
     }
