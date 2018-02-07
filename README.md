@@ -13,7 +13,7 @@
 level: 1=省份、2=市、3=区县、4=乡镇、5、村、居委会
 geo: 百度经纬度
 ### 示例数据
-| id        | code    |  name  |  pcode  |  pname  |  level  |  geo  |  fullname  |  pinyin  |  pinyin_short  |  pinyin_first_letter  |
+| id | code | name | pcode | pname | level | geo | fullname | pinyin | pinyin_short | pinyin_first_letter
 | --------   | -----:   | :----: |
 | 729412    |  110000	| 北京市	 | 000000	| 中国	| 1	|  39.92998577808024,116.39564503787867	|  北京市	|  beijingshi	|  bjs	|  b
 | 729412	|  120000	|  天津市	|  000000	|  中国	|  1	|  39.143929903310074,117.21081309155257	|  天津市	|  tianjinshi	|  tjs	|  t
