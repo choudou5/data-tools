@@ -6,7 +6,10 @@
 2、BaiduMapUtil.java  经纬度转换 (请使用自己ak)
 
 ##全国5级地区编码 (2016最新数据) 
-#### <a href="http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/" target="_blank">国家统计局</a>
+##### <a href="http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/" target="_blank">国家统计局-地区</a>
+##### <a href="http://www.stats.gov.cn/tjsj/tjbz/200911/t20091125_8667.html" target="_blank">国家统计局-地区代码规则</a>
+
+
 level: 1=省份、2=市、3=区县、4=乡镇、5、村、居委会
 geo: 百度经纬度
 ### 示例数据
