@@ -49,10 +49,11 @@ public class BaiduMapUtil {
         String jsonStr = HttpUtil.get(GEOCODE_URL + "?address=" + address + "&output=json&ak=" + appKey);
         if(StrUtil.isNotBlank(jsonStr)){
             JSONObject obj = JSONUtil.parseObj(jsonStr);
-            JSONObject result = obj.getJSONObject("result");
-            if(result != null){
-                return result.getJSONObject("location").toBean(GeoBean.class);
+            int status = obj.getInt("status");
+            if(status != 0){
+                throw new IllegalArgumentException("result status:"+status);
             }
+            return obj.getJSONObject("result").getJSONObject("location").toBean(GeoBean.class);
         }
         return null;
     }

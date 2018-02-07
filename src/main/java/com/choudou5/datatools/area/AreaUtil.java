@@ -1,17 +1,14 @@
 package com.choudou5.datatools.area;
 
-import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.choudou5.datatools.area.bean.AreaBean;
-import com.choudou5.datatools.db.DBUtil;
 import com.choudou5.datatools.log.LogHelper;
 import com.choudou5.datatools.util.JsoupUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.sql.Connection;
 import java.util.Iterator;
 
 /**
@@ -22,7 +19,6 @@ import java.util.Iterator;
 public class AreaUtil {
 
     private static int stat = 0;
-    private static boolean INSERT_DB = true;
 
     //国家统计局接口
     private static final String API = "http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/";
@@ -30,31 +26,60 @@ public class AreaUtil {
     public static void main(String[] args) throws Exception {
         //统计年
         int year = 2016;
-        depthCrawlAreaBeanList(year);
     }
+
 
     /**
      * 深度 爬取地区列表
      * @param year 统计年
+     * @param  provincePrefix 省份编码前缀
      * @return
      */
-    public static void depthCrawlAreaBeanList(int year) {
+    public static void depthCrawlAreaBeanList(int year, String provincePrefix, InsertCall call) {
         AreaBean root = new AreaBean("000000", "中国", 0);
-        initConnection();
-        depthCrawlAreaBeanList(year, root, 1);
+        crawlProvinceAreaBeanList(year, root, call, provincePrefix);
     }
 
+
     /**
-     * 深度 爬取地区列表
+     * 爬取省份 地区列表
      * @param year
      * @param parent
-     * @param level
+     * @param provincePrefix
      */
-    private static void depthCrawlAreaBeanList(int year, AreaBean parent, int level) {
+    private static void crawlProvinceAreaBeanList(int year, AreaBean parent, InsertCall call, String provincePrefix) {
+        int level = 1;
         String url = getApiUrl(level, year, parent.getPath());
         //定位内容规则
         String indexRule = getIndexRule(level);
-        Document doc = JsoupUtil.getDocument(url, "gb2312");
+        Document doc = JsoupUtil.getDocument(url, "gbk");
+        Elements eles = doc.select(indexRule);
+        if (eles != null && !eles.isEmpty()) {
+            Iterator<Element> iterator = eles.iterator();
+            AreaBean area = null;
+            for (Element ele : eles) {
+                area = parseArea(level, ele, parent);
+                if(area == null || !area.getCode().startsWith(provincePrefix))
+                    continue;
+                call.insertDB(area);
+                LogHelper.log((++stat) + area.toString());
+                //深度递归
+                depthCrawlAreaBeanList(year, area, level + 1, call);
+                area = null;
+            }
+        } else {
+            LogHelper.log(url + " 内容解析失败, 规则：" + indexRule);
+            LogHelper.log("内容定位规则不正确，请从下面复制正确的规则解析.");
+            //测试 打印规则
+            JsoupUtil.testRuleByHtml(doc.html(), "<a href=");
+        }
+    }
+
+    public static void repairCityArea(int year, AreaBean parent, int level, InsertCall call) {
+        String url = getApiUrl(level, year, parent.getPath());
+        //定位内容规则
+        String indexRule = getIndexRule(level);
+        Document doc = JsoupUtil.getDocument(url, "gbk");
         Elements eles = doc.select(indexRule);
         if (eles != null && !eles.isEmpty()) {
             Iterator<Element> iterator = eles.iterator();
@@ -63,14 +88,51 @@ public class AreaUtil {
                 area = parseArea(level, ele, parent);
                 if(area == null)
                     continue;
-                insertDB(area);
+                call.insertDB(area);
                 LogHelper.log((++stat) + area.toString());
                 if(StrUtil.isBlank(area.getPath())) {
                     area = null;
                     continue;
                 }
                 //深度递归
-                depthCrawlAreaBeanList(year, area, level + 1);
+                repairCityArea(year, area, level + 1, call);
+                area = null;
+            }
+        } else {
+            LogHelper.log(url + " 内容解析失败, 规则：" + indexRule);
+            LogHelper.log("内容定位规则不正确，请从下面复制正确的规则解析.");
+            //测试 打印规则
+            JsoupUtil.testRuleByHtml(doc.html(), "<a href=");
+        }
+    }
+
+    /**
+     * 深度 爬取地区列表
+     * @param year
+     * @param parent
+     * @param level
+     */
+    private static void depthCrawlAreaBeanList(int year, AreaBean parent, final int level, InsertCall call) {
+        String url = getApiUrl(level, year, parent.getPath());
+        //定位内容规则
+        String indexRule = getIndexRule(level);
+        Document doc = JsoupUtil.getDocument(url, "gbk");
+        Elements eles = doc.select(indexRule);
+        if (eles != null && !eles.isEmpty()) {
+            Iterator<Element> iterator = eles.iterator();
+            AreaBean area = null;
+            for (Element ele : eles) {
+                area = parseArea(level, ele, parent);
+                if(area == null)
+                    continue;
+                call.insertDB(area);
+                LogHelper.log((++stat) + area.toString());
+                if(StrUtil.isBlank(area.getPath())) {
+                    area = null;
+                    continue;
+                }
+                //深度递归
+                depthCrawlAreaBeanList(year, area, level + 1, call);
                 area = null;
             }
         } else {
@@ -144,6 +206,8 @@ public class AreaUtil {
                 String name = ele.select("td:eq(2)").text(); //名称
                 //兼容 geo查询5级地区
                 String pFullName = StrUtil.subBefore(parent.getFullname(), parent.getPname(), true);
+                if(StrUtil.isBlank(pFullName))
+                    pFullName = parent.getFullname();
                 area = new AreaBean(code, name, level, parent.getCode(), parent.getName(), pFullName, null);
             }
             code = null;
@@ -160,38 +224,14 @@ public class AreaUtil {
             for (int i = 0; i < level; i++) {
                 if(i != level){
                     int start = i*2;
-                    url.append(parent.getCode().substring(start, start+2)+"/");
+                    String space = parent.getCode().substring(start, start+2);
+                    if(!"00".equals(space))
+                        url.append(space+"/");
                 }
             }
             url.append(StrUtil.subAfter(currPath, "/", true));
         }
         return url.toString();
-    }
-
-    private static Connection con = null;
-
-    private static void initConnection(){
-        try {
-            if(INSERT_DB)
-                con = DBUtil.openConnection();
-        } catch (Exception e) {
-            e.printStackTrace();
-           System.exit(500);
-        }
-    }
-
-    private static void insertDB(AreaBean bean){
-        if(INSERT_DB){
-            String sql = "insert INTO DIC_AREA(`code`, `name`, `pcode`, `pname`, `level`, `geo`, `fullname`) values(?, ?, ?, ?, ?, ?, ?);";
-            try {
-                con.setAutoCommit(false);
-                int count = DBUtil.execute(con, sql, AreaBean.formatAreaCode(bean.getCode(), bean.getLevel()), bean.getName(), AreaBean.formatAreaCode(bean.getPcode(), bean.getLevel()-1), bean.getPname(), bean.getLevel(), bean.getGeo(), bean.getFullname());
-                con.setAutoCommit(true);
-                Assert.isTrue(count == 1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 }

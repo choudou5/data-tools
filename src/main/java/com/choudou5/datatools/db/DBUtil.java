@@ -19,9 +19,9 @@ public class DBUtil {
 
     // 初始化数据
     private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
-    private static final String URL = "jdbc:mysql://192.168.36.225:3306/lianj_dingtalk?characterEncoding=UTF8";
-    private static final String USER = "xxx";
-    private static final String PASSWORD = "xxx";
+    private static final String URL = "jdbc:mysql://localhost:3306/lianj_dingtalk?characterEncoding=UTF8";
+    private static final String USER = "root";
+    private static final String PASSWORD = "123456";
 
     private static Connection con = null;
 

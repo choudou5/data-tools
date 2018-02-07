@@ -11,6 +11,7 @@ import java.io.Serializable;
  */
 public class AreaBean implements Serializable {
 
+    private int id;
     private String code;
     private String name;
     private int level;
@@ -30,17 +31,39 @@ public class AreaBean implements Serializable {
     }
 
     public AreaBean(String code, String name, int level, String pcode, String pname, String pfullname, String path) {
+        //处理特殊 市辖区
+        if(level > 3 && StrUtil.endWith(code, "000")){
+            code = StrUtil.sub(code, 0, code.length()-3);
+        }
         this.code = code;
+        boolean bk = false;
+        if("市辖区".equals(name)) {
+            name = "";
+            bk = true;
+        }
         this.name = name;
         this.level = level;
         this.pcode = pcode;
+        if(StrUtil.isBlank(pname))
+            pname = pfullname;
         this.pname = pname;
         this.path = path;
         if(StrUtil.isBlank(pfullname)){
-            this.fullname = pname+name;
+            if(bk)
+                this.fullname = pname;
+            else
+                this.fullname = name;
         }else{
             this.fullname = pfullname+name;
         }
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getCode() {

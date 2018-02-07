@@ -1,5 +1,6 @@
 package com.choudou5.datatools.log;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
 
@@ -23,7 +24,7 @@ public class LogHelper {
 
     public static void log(Object object){
         if(switchLog && object != null){
-            System.out.println(JSONUtil.toJsonStr(object));
+            System.out.println(DateUtil.now()+":"+JSONUtil.toJsonStr(object));
         }
     }
 
