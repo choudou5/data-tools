@@ -13,12 +13,6 @@
 level: 1=省份、2=市、3=区县、4=乡镇、5、村、居委会
 geo: 百度经纬度
 ### 示例数据
-![表数据](https://share.weiyun.com/7aed596830752d40d6b8c4e0bbbf47b8)
+![Alt text](https://picabstract-preview-ftn.weiyun.com:8443/ftn_pic_abs_v2/726dd410c191baae9261af74fbfafc5f2fac245861fe01c66807142e0692b28d405eeea2cf03bfd7a34842472779ce17?pictype=scale&from=30113&version=2.0.0.2&uin=834617284&fname=1517972221%281%29.jpg&size=1024 "首页分组")
 
 SQL压缩包：<a href="https://share.weiyun.com/843cf3058b5a996b8405e2e1f60c9a1d" target="_blank">dic_area_full.7z</a> (15.6M 共计71.4w)
-
-| Name | Academy | score | 
-| - | :-: | -: | 
-| Harry Potter | Gryffindor| 90 | 
-| Hermione Granger | Gryffindor | 100 | 
-| Draco Malfoy | Slytherin | 90 |
